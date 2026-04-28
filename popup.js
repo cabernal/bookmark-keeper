@@ -1,7 +1,12 @@
-import { groupTabsInCurrentWindow, sortTabsInCurrentWindow } from "./tabs.js";
+import {
+  groupTabsInCurrentWindow,
+  sortTabsInCurrentWindow,
+  ungroupTabsInCurrentWindow
+} from "./tabs.js";
 
 const sortButton = document.querySelector("#sortButton");
 const groupButton = document.querySelector("#groupButton");
+const ungroupButton = document.querySelector("#ungroupButton");
 const status = document.querySelector("#status");
 
 sortButton.addEventListener("click", async () => {
@@ -36,17 +41,40 @@ groupButton.addEventListener("click", async () => {
     const pinnedMessage = result.pinnedCount
       ? ` ${result.pinnedCount} pinned tab${plural(result.pinnedCount)} skipped.`
       : "";
+    const movedMessage = result.ungroupedMovedCount
+      ? ` Moved ${result.ungroupedMovedCount} ungrouped tab${plural(result.ungroupedMovedCount)} to the end.`
+      : "";
 
     if (result.groupedDomainCount === 0) {
-      setStatus(`No domains with multiple tabs to group.${pinnedMessage}`);
+      setStatus(`No domains with multiple tabs to group.${movedMessage}${pinnedMessage}`);
     } else {
       setStatus(
-        `Grouped ${result.groupedTabCount} tab${plural(result.groupedTabCount)} across ${result.groupedDomainCount} domain${plural(result.groupedDomainCount)}.${pinnedMessage}`
+        `Grouped ${result.groupedTabCount} tab${plural(result.groupedTabCount)} across ${result.groupedDomainCount} domain${plural(result.groupedDomainCount)}.${movedMessage}${pinnedMessage}`
       );
     }
   } catch (error) {
     console.error(error);
     setStatus("Chrome could not group this window.", true);
+  } finally {
+    setButtonsDisabled(false);
+  }
+});
+
+ungroupButton.addEventListener("click", async () => {
+  setButtonsDisabled(true);
+  setStatus("Ungrouping...");
+
+  try {
+    const result = await ungroupTabsInCurrentWindow();
+
+    if (result.ungroupedTabCount === 0) {
+      setStatus("No grouped tabs in this window.");
+    } else {
+      setStatus(`Ungrouped ${result.ungroupedTabCount} tab${plural(result.ungroupedTabCount)}.`);
+    }
+  } catch (error) {
+    console.error(error);
+    setStatus("Chrome could not ungroup this window.", true);
   } finally {
     setButtonsDisabled(false);
   }
@@ -64,4 +92,5 @@ function plural(count) {
 function setButtonsDisabled(isDisabled) {
   sortButton.disabled = isDisabled;
   groupButton.disabled = isDisabled;
+  ungroupButton.disabled = isDisabled;
 }

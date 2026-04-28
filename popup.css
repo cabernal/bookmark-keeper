@@ -59,6 +59,15 @@ button.secondary:hover {
   background: #ddb24d;
 }
 
+button.tertiary {
+  color: #172033;
+  background: #d5dce6;
+}
+
+button.tertiary:hover {
+  background: #c5cedb;
+}
+
 button:focus-visible {
   outline: 3px solid #f5b942;
   outline-offset: 2px;
@@ -107,6 +116,15 @@ button:disabled {
 
   button.secondary:hover {
     background: #ffe08b;
+  }
+
+  button.tertiary {
+    color: #ecf0f3;
+    background: #384253;
+  }
+
+  button.tertiary:hover {
+    background: #465368;
   }
 
   .status {

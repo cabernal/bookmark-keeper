@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Sorter",
-  "description": "Sort and group tabs in the current window by domain.",
+  "description": "Sort, group, and ungroup tabs in the current window.",
   "version": "0.1.0",
   "permissions": ["tabs", "tabGroups"],
   "action": {
@@ -26,6 +26,13 @@
         "mac": "Alt+Shift+G"
       },
       "description": "Group tabs in the current window by domain"
+    },
+    "ungroup-tabs": {
+      "suggested_key": {
+        "default": "Alt+Shift+U",
+        "mac": "Alt+Shift+U"
+      },
+      "description": "Ungroup tabs in the current window"
     }
   }
 }

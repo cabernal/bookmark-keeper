@@ -15,6 +15,16 @@ const groupColors = [
   "orange"
 ];
 
+const commonSecondLevelSuffixes = new Set([
+  "ac",
+  "co",
+  "com",
+  "edu",
+  "gov",
+  "net",
+  "org"
+]);
+
 export async function sortTabsInCurrentWindow() {
   const tabs = await getTabsForFocusedWindow();
   const pinnedTabs = tabs.filter((tab) => tab.pinned);
@@ -62,9 +72,19 @@ export async function groupTabsInCurrentWindow() {
     });
 
     await chrome.tabGroups.update(groupId, {
-      title: domain,
-      color: colorForDomain(domain)
+      title: groupTitleForDomain(domain),
+      color: colorForDomain(domain),
+      collapsed: true
     });
+  }
+
+  const ungroupedTabs = await getUngroupedTabsForFocusedWindow();
+
+  if (ungroupedTabs.length > 0) {
+    await chrome.tabs.move(
+      ungroupedTabs.map((tab) => tab.id),
+      { index: -1 }
+    );
   }
 
   return {
@@ -72,8 +92,25 @@ export async function groupTabsInCurrentWindow() {
     groupedTabCount: domainGroups.reduce((total, [, domainTabs]) => {
       return total + domainTabs.length;
     }, 0),
+    ungroupedMovedCount: ungroupedTabs.length,
     pinnedCount: pinnedTabs.length,
     groupableCount: groupableTabs.length
+  };
+}
+
+export async function ungroupTabsInCurrentWindow() {
+  const tabs = await getTabsForFocusedWindow();
+  const noGroupId = chrome.tabGroups?.TAB_GROUP_ID_NONE ?? -1;
+  const groupedTabs = tabs.filter((tab) => {
+    return Number.isInteger(tab.id) && tab.groupId !== noGroupId;
+  });
+
+  if (groupedTabs.length > 0) {
+    await chrome.tabs.ungroup(groupedTabs.map((tab) => tab.id));
+  }
+
+  return {
+    ungroupedTabCount: groupedTabs.length
   };
 }
 
@@ -115,6 +152,17 @@ function compareTabs(left, right) {
   );
 }
 
+async function getUngroupedTabsForFocusedWindow() {
+  const noGroupId = chrome.tabGroups?.TAB_GROUP_ID_NONE ?? -1;
+  const tabs = await getTabsForFocusedWindow();
+
+  return tabs
+    .filter((tab) => {
+      return !tab.pinned && Number.isInteger(tab.id) && tab.groupId === noGroupId;
+    })
+    .sort((left, right) => left.index - right.index);
+}
+
 function groupTabsByDomain(tabs) {
   const tabsByDomain = new Map();
 
@@ -136,4 +184,28 @@ function colorForDomain(domain) {
   }
 
   return groupColors[hash % groupColors.length];
+}
+
+function groupTitleForDomain(domain) {
+  const labels = domain.split(".").filter(Boolean);
+
+  if (labels.length <= 1) {
+    return domain;
+  }
+
+  const suffixStart = getSuffixStart(labels);
+  const nameLabels = labels.slice(0, suffixStart);
+
+  return nameLabels.join(".") || domain;
+}
+
+function getSuffixStart(labels) {
+  const lastIndex = labels.length - 1;
+  const secondToLastLabel = labels[lastIndex - 1];
+
+  if (labels[lastIndex].length === 2 && commonSecondLevelSuffixes.has(secondToLastLabel)) {
+    return Math.max(lastIndex - 1, 1);
+  }
+
+  return lastIndex;
 }
