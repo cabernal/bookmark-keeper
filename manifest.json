@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "Sorter",
+  "description": "Sort and group tabs in the current window by domain.",
+  "version": "0.1.0",
+  "permissions": ["tabs", "tabGroups"],
+  "action": {
+    "default_title": "Sorter",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "commands": {
+    "sort-by-domain": {
+      "suggested_key": {
+        "default": "Alt+Shift+D",
+        "mac": "Alt+Shift+D"
+      },
+      "description": "Sort tabs in the current window by domain"
+    },
+    "group-by-domain": {
+      "suggested_key": {
+        "default": "Alt+Shift+G",
+        "mac": "Alt+Shift+G"
+      },
+      "description": "Group tabs in the current window by domain"
+    }
+  }
+}
