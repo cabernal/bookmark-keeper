@@ -1,5 +1,6 @@
 import {
   groupTabsInCurrentWindow,
+  groupUngroupedTabsInCurrentWindow,
   sortTabsInCurrentWindow,
   ungroupTabsInCurrentWindow
 } from "./tabs.js";
@@ -14,6 +15,12 @@ chrome.commands.onCommand.addListener((command) => {
   if (command === "group-by-domain") {
     groupTabsInCurrentWindow().catch((error) => {
       console.error("Failed to group tabs by domain", error);
+    });
+  }
+
+  if (command === "group-ungrouped-tabs") {
+    groupUngroupedTabsInCurrentWindow().catch((error) => {
+      console.error("Failed to group ungrouped tabs", error);
     });
   }
 

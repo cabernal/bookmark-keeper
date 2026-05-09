@@ -98,6 +98,37 @@ export async function groupTabsInCurrentWindow() {
   };
 }
 
+export async function groupUngroupedTabsInCurrentWindow() {
+  const tabs = await getTabsForFocusedWindow();
+  const pinnedTabs = tabs.filter((tab) => tab.pinned);
+  const ungroupedTabs = getUngroupedTabs(tabs);
+
+  if (ungroupedTabs.length > 0) {
+    const tabIds = ungroupedTabs.map((tab) => tab.id);
+    const miscGroup = await getGroupForTitle(tabs, "misc");
+
+    if (!miscGroup) {
+      await chrome.tabs.move(tabIds, { index: -1 });
+    }
+
+    const groupId = await chrome.tabs.group({
+      tabIds,
+      ...(miscGroup ? { groupId: miscGroup.id } : {})
+    });
+
+    await chrome.tabGroups.update(groupId, {
+      title: "misc",
+      color: "grey",
+      collapsed: true
+    });
+  }
+
+  return {
+    groupedTabCount: ungroupedTabs.length,
+    pinnedCount: pinnedTabs.length
+  };
+}
+
 export async function ungroupTabsInCurrentWindow() {
   const tabs = await getTabsForFocusedWindow();
   const noGroupId = chrome.tabGroups?.TAB_GROUP_ID_NONE ?? -1;
@@ -153,14 +184,34 @@ function compareTabs(left, right) {
 }
 
 async function getUngroupedTabsForFocusedWindow() {
-  const noGroupId = chrome.tabGroups?.TAB_GROUP_ID_NONE ?? -1;
   const tabs = await getTabsForFocusedWindow();
+
+  return getUngroupedTabs(tabs);
+}
+
+function getUngroupedTabs(tabs) {
+  const noGroupId = chrome.tabGroups?.TAB_GROUP_ID_NONE ?? -1;
 
   return tabs
     .filter((tab) => {
       return !tab.pinned && Number.isInteger(tab.id) && tab.groupId === noGroupId;
     })
     .sort((left, right) => left.index - right.index);
+}
+
+async function getGroupForTitle(tabs, title) {
+  const windowId = tabs.find((tab) => Number.isInteger(tab.windowId))?.windowId;
+
+  if (!Number.isInteger(windowId)) {
+    return undefined;
+  }
+
+  const groups = await chrome.tabGroups.query({
+    title,
+    windowId
+  });
+
+  return groups.sort((left, right) => left.id - right.id)[0];
 }
 
 function groupTabsByDomain(tabs) {

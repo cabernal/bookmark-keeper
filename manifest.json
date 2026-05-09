@@ -1,11 +1,11 @@
 {
   "manifest_version": 3,
-  "name": "Sorter",
+  "name": "Bookmark Keeper",
   "description": "Sort, group, and ungroup tabs in the current window.",
   "version": "0.1.0",
   "permissions": ["tabs", "tabGroups"],
   "action": {
-    "default_title": "Sorter",
+    "default_title": "Bookmark Keeper",
     "default_popup": "popup.html"
   },
   "background": {
@@ -26,6 +26,13 @@
         "mac": "Alt+Shift+G"
       },
       "description": "Group tabs in the current window by domain"
+    },
+    "group-ungrouped-tabs": {
+      "suggested_key": {
+        "default": "Alt+Shift+M",
+        "mac": "Alt+Shift+M"
+      },
+      "description": "Group ungrouped tabs in the current window into misc"
     },
     "ungroup-tabs": {
       "suggested_key": {

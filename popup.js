@@ -1,11 +1,13 @@
 import {
   groupTabsInCurrentWindow,
+  groupUngroupedTabsInCurrentWindow,
   sortTabsInCurrentWindow,
   ungroupTabsInCurrentWindow
 } from "./tabs.js";
 
 const sortButton = document.querySelector("#sortButton");
 const groupButton = document.querySelector("#groupButton");
+const miscGroupButton = document.querySelector("#miscGroupButton");
 const ungroupButton = document.querySelector("#ungroupButton");
 const status = document.querySelector("#status");
 
@@ -60,6 +62,29 @@ groupButton.addEventListener("click", async () => {
   }
 });
 
+miscGroupButton.addEventListener("click", async () => {
+  setButtonsDisabled(true);
+  setStatus("Grouping ungrouped tabs...");
+
+  try {
+    const result = await groupUngroupedTabsInCurrentWindow();
+    const pinnedMessage = result.pinnedCount
+      ? ` ${result.pinnedCount} pinned tab${plural(result.pinnedCount)} skipped.`
+      : "";
+
+    if (result.groupedTabCount === 0) {
+      setStatus(`No ungrouped tabs to group.${pinnedMessage}`);
+    } else {
+      setStatus(`Grouped ${result.groupedTabCount} ungrouped tab${plural(result.groupedTabCount)} into misc.${pinnedMessage}`);
+    }
+  } catch (error) {
+    console.error(error);
+    setStatus("Chrome could not group ungrouped tabs.", true);
+  } finally {
+    setButtonsDisabled(false);
+  }
+});
+
 ungroupButton.addEventListener("click", async () => {
   setButtonsDisabled(true);
   setStatus("Ungrouping...");
@@ -92,5 +117,6 @@ function plural(count) {
 function setButtonsDisabled(isDisabled) {
   sortButton.disabled = isDisabled;
   groupButton.disabled = isDisabled;
+  miscGroupButton.disabled = isDisabled;
   ungroupButton.disabled = isDisabled;
 }
